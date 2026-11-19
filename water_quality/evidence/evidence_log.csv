@@ -1,0 +1,28 @@
+time,location,class,count,highest_confidence,source,file
+2026-11-19 14:20:08,Lower Seletar Reservoir,Plastic,1,0.499,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142008_Drone_49.jpg
+2026-11-19 14:20:14,Lower Seletar Reservoir,Plastic,4,0.721,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142014_Drone_72.jpg
+2026-11-19 14:20:37,Lower Seletar Reservoir,Plastic,2,0.623,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142037_Drone_62.jpg
+2026-11-19 14:20:43,Lower Seletar Reservoir,Plastic,1,0.560,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142043_Drone_55.jpg
+2026-11-19 14:20:49,Lower Seletar Reservoir,Plastic,1,0.645,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142049_Drone_64.jpg
+2026-11-19 14:20:57,Lower Seletar Reservoir,Plastic,1,0.502,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142057_Drone_50.jpg
+2026-11-19 14:21:04,Lower Seletar Reservoir,Plastic,1,0.569,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142104_Drone_56.jpg
+2026-11-19 14:21:10,Lower Seletar Reservoir,Plastic,2,0.604,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142110_Drone_60.jpg
+2026-11-19 14:21:16,Lower Seletar Reservoir,Plastic,1,0.542,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142116_Drone_54.jpg
+2026-11-19 14:21:22,Lower Seletar Reservoir,Plastic,1,0.611,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142122_Drone_61.jpg
+2026-11-19 14:21:33,Lower Seletar Reservoir,Plastic,1,0.587,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142133_Drone_58.jpg
+2026-11-19 14:21:39,Lower Seletar Reservoir,Plastic,3,0.692,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142139_Drone_69.jpg
+2026-11-19 14:21:45,Lower Seletar Reservoir,Plastic,3,0.660,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142145_Drone_66.jpg
+2026-11-19 14:22:15,Lower Seletar Reservoir,Plastic,1,0.653,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Lower_Seletar_Reservoir\Plastic\20261119_142215_Drone_65.jpg
+2026-11-19 14:26:24,Bedok Reservoir,Plastic,1,0.472,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_142624_Drone_47.jpg
+2026-11-19 14:26:36,Bedok Reservoir,Plastic,1,0.723,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_142636_Drone_72.jpg
+2026-11-19 14:26:42,Bedok Reservoir,Plastic,3,0.683,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_142642_Drone_68.jpg
+2026-11-19 14:26:49,Bedok Reservoir,Plastic,2,0.736,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_142649_Drone_73.jpg
+2026-11-19 14:26:55,Bedok Reservoir,Plastic,1,0.753,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_142655_Drone_75.jpg
+2026-11-19 14:27:45,Bedok Reservoir,Plastic,1,0.733,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_142745_Drone_73.jpg
+2026-11-19 14:29:02,Bedok Reservoir,Polluted Water,1,0.784,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Polluted_Water\20261119_142902_Drone_78.jpg
+2026-11-19 14:29:08,Bedok Reservoir,Polluted Water,1,0.784,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Polluted_Water\20261119_142908_Drone_78.jpg
+2026-11-19 14:29:10,Bedok Reservoir,Plastic,1,0.605,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_142910_Drone_60.jpg
+2026-11-19 14:29:46,Bedok Reservoir,Polluted Water,1,0.604,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Polluted_Water\20261119_142946_Drone_60.jpg
+2026-11-19 14:30:00,Bedok Reservoir,Plastic,1,0.597,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_143000_Drone_59.jpg
+2026-11-19 14:30:23,Bedok Reservoir,Plastic,1,0.597,Drone,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_143023_Drone_59.jpg
+2026-11-19 14:52:09,Bedok Reservoir,Plastic,10,0.816,Image,C:\Users\seela\Documents\Term4\water_quality\evidence\Bedok_Reservoir\Plastic\20261119_145209_Image_81.jpg

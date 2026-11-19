@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<!--
+  Drone keyboard control (custom Streamlit component, no build step needed).
+
+  Keys
+    C            connect drone              N N   disconnect (only when landed)
+    T            take off                   G     land
+    H            hover                      X X   emergency stop (motors off)
+    Arrow keys   up / down / left / right (arrow distance)
+    W / S        forward / back (asks how many cm first)
+    Q / E        turn left / right 90
+    M            set the arrow distance (cm)
+    I            AI detection on / off
+
+  The listener sits on the main Streamlit page, so you do not need to click
+  this panel first. Keys typed into text fields are ignored.
+-->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif; color: #1E2A22; background: transparent; }
+  .panel { background: #FFFFFF; border: 1px solid #E2E8E3; border-radius: 12px; padding: 14px 16px; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .title { font-size: 13px; font-weight: 600; }
+  .pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .pill.on { background: #E6F2E9; color: #2D6E46; }
+  .pill.off { background: #EEF1EF; color: #5E6B63; }
+  .pill.busy { background: #FBF3E3; color: #A87523; }
+  .group { font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+           color: #6B7A70; margin: 10px 0 6px 0; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 10px; }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #1E2A22; transition: opacity 0.15s; }
+  .item.disabled { opacity: 0.38; }
+  .key { min-width: 30px; height: 27px; padding: 0 7px; display: inline-flex; align-items: center; justify-content: center;
+         border: 1px solid #D5DDD7; border-bottom-width: 2px; border-radius: 6px; background: #F8FAF8;
+         font-size: 12px; font-weight: 600; color: #2D5A3D; white-space: nowrap; transition: background 0.1s; }
+  .key.pressed { background: #2D5A3D; color: #FFFFFF; border-color: #2D5A3D; }
+  .item.danger .key { color: #A9443A; }
+  .prompt { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 10px;
+            background: #F5F7F5; border: 1px solid #8DAA91; border-left: 4px solid #2D5A3D; }
+  .prompt.show { display: block; }
+  .prompt-q { font-size: 14px; font-weight: 600; color: #1E2A22; }
+  .prompt-q .buf { color: #2D5A3D; font-variant-numeric: tabular-nums; }
+  .prompt-hint { font-size: 12px; color: #6B7A70; margin-top: 3px; }
+  .msg { margin-top: 10px; font-size: 12px; color: #6B7A70; min-height: 16px; }
+  .msg.warn { color: #A9443A; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div class="title">Keyboard Controls</div>
+    <div id="pill" class="pill off">Disconnected</div>
+  </div>
+
+  <div class="group">Drone</div>
+  <div class="grid">
+    <div class="item" data-k="c"><span class="key">C</span>Connect</div>
+    <div class="item" data-k="t"><span class="key">T</span>Take off</div>
+    <div class="item" data-k="g"><span class="key">G</span>Land</div>
+    <div class="item" data-k="h"><span class="key">H</span>Hover</div>
+    <div class="item" data-k="i"><span class="key">I</span><span id="i-label">Detection on</span></div>
+    <div class="item" data-k="m"><span class="key">M</span><span id="m-label">Arrow distance</span></div>
+    <div class="item" data-k="n"><span class="key">N N</span>Disconnect</div>
+    <div class="item danger" data-k="x"><span class="key">X X</span>Emergency stop</div>
+  </div>
+
+  <div class="group">Flight (enabled after take-off)</div>
+  <div class="grid">
+    <div class="item" data-k="w"><span class="key">W</span>Forward (cm)</div>
+    <div class="item" data-k="s"><span class="key">S</span>Back (cm)</div>
+    <div class="item" data-k="q"><span class="key">Q</span>Turn left</div>
+    <div class="item" data-k="e"><span class="key">E</span>Turn right</div>
+    <div class="item" data-k="ArrowUp"><span class="key">&uarr;</span>Up</div>
+    <div class="item" data-k="ArrowDown"><span class="key">&darr;</span>Down</div>
+    <div class="item" data-k="ArrowLeft"><span class="key">&larr;</span>Left</div>
+    <div class="item" data-k="ArrowRight"><span class="key">&rarr;</span>Right</div>
+  </div>
+
+  <div id="prompt" class="prompt">
+    <div class="prompt-q"><span id="prompt-text"></span> <span class="buf" id="prompt-buf"></span><span id="cursor">_</span> cm</div>
+    <div class="prompt-hint" id="prompt-hint"></div>
+  </div>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script>
+(function () {
+  // ---------------- Streamlit component protocol ----------------
+  function send(type, data) {
+    window.parent.postMessage(Object.assign({ isStreamlitMessage: true, type: type }, data || {}), "*");
+  }
+  let lastHeight = 0;
+  function setHeight() {
+    const h = document.body.scrollHeight + 2;
+    if (h !== lastHeight) { lastHeight = h; send("streamlit:setFrameHeight", { height: h }); }
+  }
+
+  let args = { connected: false, flying: false, busy: false, detecting: false,
+               move_cm: 30, forward_cm: 30, min_cm: 20, max_cm: 500, test_mode: false };
+  let counter = 0;
+
+  window.addEventListener("message", function (event) {
+    if (!event.data || event.data.type !== "streamlit:render") return;
+    args = Object.assign(args, event.data.args || {});
+    render();
+  });
+
+  function emit(key, cm) {
+    counter += 1;
+    send("streamlit:setComponentValue", {
+      value: { id: Date.now() + "-" + counter, key: key, cm: (cm === undefined ? null : cm) },
+      dataType: "json"
+    });
+  }
+
+  // ---------------- state ----------------
+  const MOVES = ["w", "s", "q", "e", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+  const ALL = ["c", "t", "g", "h", "i", "m", "n", "x"].concat(MOVES);
+  let prompt = null;          // { key, label, buf, started }
+  let message = "", messageWarn = false, messageUntil = 0;
+  const armed = { x: 0, n: 0 }; // double-press timers
+
+  function enabled(k) {
+    if (k === "c") return !args.connected;
+    if (k === "t") return args.connected && !args.flying && !args.busy;
+    if (k === "g" || k === "h") return args.flying;
+    if (k === "x") return args.connected;
+    if (k === "n") return args.connected && !args.flying;
+    if (k === "i") return args.connected;
+    if (k === "m") return true;
+    if (MOVES.indexOf(k) >= 0) return args.flying;
+    return false;
+  }
+
+  function reason(k) {
+    if (!args.connected) return "Press C to connect the drone first.";
+    if (k === "c") return "Already connected.";
+    if (k === "t") return args.flying ? "Already flying." : "Busy - wait for the current command.";
+    if (k === "n") return "Land first (G) before disconnecting.";
+    return "Take off first (T). Flight keys unlock after a successful take-off.";
+  }
+
+  function say(text, warn, seconds) {
+    message = text; messageWarn = !!warn; messageUntil = Date.now() + (seconds || 4) * 1000;
+    render();
+  }
+
+  // ---------------- UI ----------------
+  const pill = document.getElementById("pill");
+  const msgEl = document.getElementById("msg");
+  const promptEl = document.getElementById("prompt");
+
+  function render() {
+    if (!args.connected) { pill.className = "pill off"; pill.textContent = "Disconnected"; }
+    else if (args.busy) { pill.className = "pill busy"; pill.textContent = args.flying ? "Moving" : "Taking off"; }
+    else if (args.flying) { pill.className = "pill on"; pill.textContent = "Flying - controls enabled"; }
+    else { pill.className = "pill off"; pill.textContent = args.test_mode ? "Landed (test mode)" : "Landed"; }
+
+    ALL.forEach(function (k) {
+      const el = document.querySelector('.item[data-k="' + k + '"]');
+      if (el) el.classList.toggle("disabled", !enabled(k));
+    });
+    document.getElementById("i-label").textContent = args.detecting ? "Detection off" : "Detection on";
+    document.getElementById("m-label").textContent = "Arrow distance (" + args.move_cm + " cm)";
+
+    if (prompt) {
+      promptEl.classList.add("show");
+      document.getElementById("prompt-text").textContent = prompt.label;
+      document.getElementById("prompt-buf").textContent = prompt.buf;
+      document.getElementById("prompt-hint").textContent =
+        "Type " + args.min_cm + " to " + args.max_cm + ", press Enter" +
+        (prompt.fallback ? " (empty = " + prompt.fallback + " cm)" : "") + ". Esc cancels.";
+    } else {
+      promptEl.classList.remove("show");
+    }
+
+    if (Date.now() < messageUntil) {
+      msgEl.textContent = message; msgEl.className = messageWarn ? "msg warn" : "msg";
+    } else if (!args.connected) {
+      msgEl.textContent = "Press C to connect. Flight keys unlock after take-off (T)."; msgEl.className = "msg";
+    } else if (!args.flying) {
+      msgEl.textContent = "Press T to take off. All flight keys unlock once the drone is in the air."; msgEl.className = "msg";
+    } else {
+      msgEl.textContent = "Arrow keys move " + args.move_cm + " cm. W and S ask for a distance."; msgEl.className = "msg";
+    }
+    setHeight();
+  }
+
+  function flash(k) {
+    const el = document.querySelector('.item[data-k="' + k + '"] .key');
+    if (!el) return;
+    el.classList.add("pressed");
+    setTimeout(function () { el.classList.remove("pressed"); }, 180);
+  }
+
+  // blinking cursor + prompt timeout + message expiry
+  setInterval(function () {
+    const c = document.getElementById("cursor");
+    c.style.visibility = (Math.floor(Date.now() / 500) % 2) ? "hidden" : "visible";
+    if (prompt && Date.now() - prompt.started > 20000) { prompt = null; say("Distance prompt timed out.", false, 3); }
+    if (messageUntil && Date.now() > messageUntil) { messageUntil = 0; render(); }
+  }, 250);
+
+  // ---------------- distance prompt (W, S and M) ----------------
+  function openPrompt(key) {
+    const labels = { w: "Move forward:", s: "Move back:", m: "Arrow key distance:" };
+    prompt = { key: key, label: labels[key], buf: "", started: Date.now(),
+               fallback: key === "m" ? args.move_cm : args.forward_cm };
+    render();
+  }
+
+  function promptKey(e) {
+    e.preventDefault(); e.stopPropagation();
+    prompt.started = Date.now();
+    if (e.key === "Escape") { prompt = null; say("Cancelled.", false, 2); return; }
+    if (e.key === "Backspace") { prompt.buf = prompt.buf.slice(0, -1); render(); return; }
+    if (e.key === "Enter") {
+      const cm = prompt.buf === "" ? prompt.fallback : parseInt(prompt.buf, 10);
+      if (isNaN(cm) || cm < args.min_cm || cm > args.max_cm) {
+        prompt.buf = "";
+        say("Distance must be " + args.min_cm + " to " + args.max_cm + " cm.", true, 4);
+        return;
+      }
+      const key = prompt.key;
+      prompt = null;
+      if (key === "m") { emit("m", cm); say("Arrow distance set to " + cm + " cm.", false, 3); }
+      else { emit(key, cm); say((key === "w" ? "Forward " : "Back ") + cm + " cm sent.", false, 3); }
+      return;
+    }
+    if (/^[0-9]$/.test(e.key) && prompt.buf.length < 3) { prompt.buf += e.key; render(); }
+  }
+
+  // ---------------- keyboard listener on the main page ----------------
+  function isTyping(target) {
+    if (!target) return false;
+    const tag = (target.tagName || "").toLowerCase();
+    const role = target.getAttribute ? (target.getAttribute("role") || "") : "";
+    return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable
+      || role === "combobox" || role === "spinbutton" || role === "listbox";
+  }
+
+  function onKey(e) {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (prompt) { promptKey(e); return; }
+    if (isTyping(e.target)) return;
+
+    const k = e.key && e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (ALL.indexOf(k) < 0) return;
+    e.preventDefault(); e.stopPropagation();   // arrow keys must not scroll or move sliders
+    if (e.repeat) return;                       // holding a key sends one command only
+    flash(k);
+
+    if (!enabled(k)) { say(reason(k), true, 4); return; }
+
+    if (k === "x" || k === "n") {               // press twice within 2 s
+      const now = Date.now();
+      if (now - armed[k] <= 2000) {
+        armed[k] = 0;
+        emit(k);
+        say(k === "x" ? "EMERGENCY STOP sent - motors off." : "Disconnecting...", k === "x", 4);
+      } else {
+        armed[k] = now;
+        say(k === "x" ? "Press X again within 2 seconds to cut the motors (the drone will drop)."
+                      : "Press N again within 2 seconds to disconnect.", true, 2.5);
+      }
+      return;
+    }
+    if (k === "w" || k === "s" || k === "m") { openPrompt(k); return; }
+    emit(k);
+  }
+
+  let doc;
+  try { doc = window.parent.document; doc.body; } catch (err) { doc = document; }
+  const host = doc.defaultView || window;
+  if (host.__wqDroneKeyHandler) {
+    doc.removeEventListener("keydown", host.__wqDroneKeyHandler, true);
+  }
+  host.__wqDroneKeyHandler = onKey;
+  doc.addEventListener("keydown", onKey, true);
+  if (doc !== document) document.addEventListener("keydown", onKey, true);
+
+  // Stop listening when this panel disappears (page change)
+  window.addEventListener("pagehide", function () {
+    if (host.__wqDroneKeyHandler === onKey) {
+      doc.removeEventListener("keydown", onKey, true);
+      host.__wqDroneKeyHandler = null;
+    }
+  });
+
+  render();
+  send("streamlit:componentReady", { apiVersion: 1 });
+})();
+</script>
+</body>
+</html>
