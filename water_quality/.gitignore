@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# The database IS uploaded (so the online app shows your data);
+# only its temporary side files are skipped.
+data/*.db-wal
+data/*.db-shm
+evidence/
+weights/last.pt
+push.log
+
+# Training / testing leftovers
+runs/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Keep the model weights: weights/best.pt must be committed
+!weights/best.pt

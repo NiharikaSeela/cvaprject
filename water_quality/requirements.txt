@@ -1,0 +1,12 @@
+# CPU-only PyTorch: much smaller download, avoids running out of space on Streamlit Cloud.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+
+# Official Ultralytics build that uses headless OpenCV (no libGL needed on servers).
+ultralytics-opencv-headless>=8.3.0
+opencv-python-headless>=4.9
+
+streamlit>=1.40
+pandas>=2.0
+numpy>=1.26
